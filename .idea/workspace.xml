@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="43fa967a-6748-4acb-b7de-d0707c8a47d2" name="Changes" comment="initial commit">
-      <change afterPath="$PROJECT_DIR$/bot.py" afterDir="false" />
+    <list default="true" id="43fa967a-6748-4acb-b7de-d0707c8a47d2" name="Changes" comment="refactor: added requirements.txt">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bot.py" beforeDir="false" afterPath="$PROJECT_DIR$/bot.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,9 +52,15 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/tkach/PycharmProjects/DiscordBot",
     "settings.editor.selected.configurable": "org.jetbrains.plugins.github.ui.GithubSettingsConfigurable"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\tkach\PycharmProjects\DiscordBot" />
+    </key>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -86,12 +92,39 @@
       <option name="project" value="LOCAL" />
       <updated>1794136831961</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="feat: added basic code for my discord bot">
+      <option name="closed" value="true" />
+      <created>1794147793730</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1794147793730</updated>
+    </task>
+    <task id="LOCAL-00004" summary="refactor: deleted main.py">
+      <option name="closed" value="true" />
+      <created>1794147992393</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1794147992393</updated>
+    </task>
+    <task id="LOCAL-00005" summary="refactor: added requirements.txt">
+      <option name="closed" value="true" />
+      <created>1794148448697</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1794148448697</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="test" />
     <MESSAGE value="initial commit" />
-    <option name="LAST_COMMIT_MESSAGE" value="initial commit" />
+    <MESSAGE value="feat: added basic code for my discord bot" />
+    <MESSAGE value="refactor: deleted main.py" />
+    <MESSAGE value="refactor: added requirements.txt" />
+    <option name="LAST_COMMIT_MESSAGE" value="refactor: added requirements.txt" />
   </component>
 </project>

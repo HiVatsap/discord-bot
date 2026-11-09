@@ -11,11 +11,14 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-client = discord.Client(intents=intents)
+activity = discord.Game(name="гедешечку")
+
+client = discord.Client(intents=intents, activity=activity)
 
 CONSOLE_CHANNEL_ID = 1568958721428815912
 COUNT_CHANNEL_1_ID = 1558849614369521826
 COUNT_CHANNEL_2_ID = 1558850421613797517
+VOICE_LOG_CHANNEL_ID = 1569332801029799946
 ROLE_1_ID = 1525602964968833257
 ROLE_2_ID = 1479964252675768432
 
@@ -44,7 +47,6 @@ hello_variants = ("привет",
                   "nǐ hǎo",
                   "hola",
                   "ciao",
-                  "namaste",
                   "udvozlet",
                   "здарова",
                   "salut",
@@ -116,6 +118,28 @@ async def update_stats_channels():
                         print(f"ОШИБКА: Имя канала 2 не было обновлено из-за лимита Дискорда ({e})")
 
         await asyncio.sleep(300)
+
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    if member.bot:
+        return
+
+    log_channel = member.guild.get_channel(VOICE_LOG_CHANNEL_ID)
+    if not log_channel:
+        return
+
+    if before.channel is None and after.channel is not None:
+        text = f":green_circle: **{member.display_name}** зашёл в голосовой канал **{after.channel.name}**"
+        await log_channel.send(text)
+
+    elif before.channel is not None and after.channel is None:
+        text = f"🔴 **{member.display_name}** вышел из голосового канала **{before.channel.name}**"
+        await log_channel.send(text)
+
+    elif before.channel != after.channel and before.channel and after.channel:
+        text = f"🔁 **{member.display_name}** переместился из **{before.channel.name}** в **{after.channel.name}**"
+        await log_channel.send(text)
 
 
 @client.event
