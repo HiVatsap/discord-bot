@@ -3,9 +3,11 @@ import os
 import discord
 from dotenv import load_dotenv
 
+from config import hello_variants, save_words
+
 load_dotenv()
 
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv('DISCORD_TOKEN_TEST')
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -24,68 +26,6 @@ ROLE_1_ID = 1525602964968833257
 ROLE_2_ID = 1479964252675768432
 
 is_paused = False
-
-hello_variants = ("привет",
-                  "привіт",
-                  "ahoj",
-                  "cs",
-                  "labas",
-                  "здравствуйте",
-                  "добрий день",
-                  "добрый день",
-                  "доброго дня",
-                  "охайо",
-                  "hallo",
-                  "hello",
-                  "hi",
-                  "labukas",
-                  "čau",
-                  "sveiki",
-                  "здравейте",
-                  "охайошечки даттебаёшечки",
-                  "дарова",
-                  "hej",
-                  "こんにちは",
-                  "你好",
-                  "nǐ hǎo",
-                  "hola",
-                  "ciao",
-                  "udvozlet",
-                  "здарова",
-                  "salut",
-                  "salutations",
-                  "labuka",
-                  "sveikas",
-                  "hey",
-                  "ni hao",
-                  "konnichiwa",
-                  "konbanwa",
-                  "ohayo",
-                  "шалом",
-                  "שלום",
-                  "салом",
-                  "cau",
-                  "مرحبًا",
-                  "салам",
-                  "салям",
-                  "салом",
-                  "гамарджоба",
-                  "ку",
-                  "саламдашуулар",
-                  "สวัสดี",
-                  "สวัสดีครับ",
-                  "สวัสดีค่ะ",
-                  "czesc",
-                  "cześć",
-                  "siema",
-                  "elo żelo",
-                  "elo",
-                  "прывітанні",
-                  "поздрави",
-                  "маршалла хаттар",
-                  "bună",
-                  "гой еси"
-                  )
 
 
 async def update_stats_channels():
@@ -187,7 +127,9 @@ async def on_message(message):
 
     global is_paused
 
-    if message.content.lower() in ("a6!continue", "а6!continue"):
+    content_lower = message.content.lower()
+
+    if content_lower in ("a6!continue", "а6!continue"):
         if not message.author.guild_permissions.administrator:
             await message.channel.send("🔴 !!! У вас нет права на использование данной команды !!! 🔴")
             return
@@ -212,7 +154,25 @@ async def on_message(message):
     if is_paused:
         return
 
-    if message.content.lower() in ("a6!pause", "а6!pause"):
+    if content_lower.startswith(("a6!addhello", "а6!addhello")):
+        parts = message.content.split(maxsplit=1)
+        if len(parts) < 2:
+            await message.channel.send(
+                ":warning: Укажите слово, которое хотите вставить! Например: a6!addhello ку :warning:"
+            )
+            return
+        new_word = parts[1].strip().lower()
+
+        if new_word in hello_variants:
+            await message.channel.send(f'⚠️ Слово "{new_word}" уже есть в списке приветствий ⚠️')
+            return
+
+        hello_variants.append(new_word)
+        save_words(hello_variants)
+        await message.channel.send(f'ℹ️  Слово "{new_word}" добавлено в список приветствий  ℹ️')
+        return
+
+    if content_lower in ("a6!pause", "а6!pause"):
         if not message.author.guild_permissions.administrator:
             await message.channel.send("🔴 !!! У вас нет права на использование данной команды !!! 🔴")
             return
@@ -235,9 +195,9 @@ async def on_message(message):
 
         return
 
-    if message.content.lower() in hello_variants:
+    if content_lower in hello_variants:
         await message.channel.send(f"{message.content.capitalize()}, {message.author.mention}!")
-    if message.content.lower() in ("ас-саляму алейкум", "السَّلَامُ عَلَيْكُمْ", "ассаляму алейкум"):
+    if content_lower in ("ас-саляму алейкум", "السَّلَامُ عَلَيْكُمْ", "ассаляму алейкум"):
         await message.channel.send(f"Ваалейкум ассалям, {message.author.mention}!")
 
 
@@ -255,7 +215,7 @@ async def shutdown():
                 await channel.send("Бот отключается! (🏮)")
                 await asyncio.sleep(0.5)
             except Exception as e:
-                print(f"ОШИБКА: При отправке сообщения получана ошибка ({e})")
+                print(f"ОШИБКА: При отправке сообщения получена ошибка ({e})")
             finally:
                 await temp_client.close()
 
