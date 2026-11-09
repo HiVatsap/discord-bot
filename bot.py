@@ -11,7 +11,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-activity = discord.Game(name="гедешечку")
+activity = discord.Game(name="Играет Nebulabrasque")
 
 client = discord.Client(intents=intents, activity=activity)
 
@@ -19,6 +19,7 @@ CONSOLE_CHANNEL_ID = 1568958721428815912
 COUNT_CHANNEL_1_ID = 1558849614369521826
 COUNT_CHANNEL_2_ID = 1558850421613797517
 VOICE_LOG_CHANNEL_ID = 1569332801029799946
+IGNORED_VOICE_CHANNEL_ID = 1558465456451625161
 ROLE_1_ID = 1525602964968833257
 ROLE_2_ID = 1479964252675768432
 
@@ -127,6 +128,12 @@ async def on_voice_state_update(member, before, after):
 
     log_channel = member.guild.get_channel(VOICE_LOG_CHANNEL_ID)
     if not log_channel:
+        return
+
+    if after.channel and after.channel.id == IGNORED_VOICE_CHANNEL_ID:
+        return
+
+    if before.channel and before.channel.id == IGNORED_VOICE_CHANNEL_ID:
         return
 
     if before.channel is None and after.channel is not None:
