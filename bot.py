@@ -23,6 +23,8 @@ IGNORED_VOICE_CHANNEL_ID = 1558465456451625161
 ROLE_1_ID = 1525602964968833257
 ROLE_2_ID = 1479964252675768432
 
+is_paused = False
+
 hello_variants = ("привет",
                   "привіт",
                   "ahoj",
@@ -90,6 +92,10 @@ async def update_stats_channels():
     await client.wait_until_ready()
 
     while not client.is_closed():
+        if is_paused:
+            await asyncio.sleep(5)
+            continue
+
         for guild in client.guilds:
             channel1 = guild.get_channel(COUNT_CHANNEL_1_ID)
             channel2 = guild.get_channel(COUNT_CHANNEL_2_ID)
@@ -123,20 +129,31 @@ async def update_stats_channels():
 
 @client.event
 async def on_voice_state_update(member, before, after):
-    if member.bot:
+    # if member.bot:
+    #    return
+
+    if is_paused:
         return
 
     log_channel = member.guild.get_channel(VOICE_LOG_CHANNEL_ID)
     if not log_channel:
         return
 
-    if after.channel and after.channel.id == IGNORED_VOICE_CHANNEL_ID:
+    is_before_ignoring = before.channel and before.channel.id == IGNORED_VOICE_CHANNEL_ID
+    is_after_ignoring = after.channel and after.channel.id == IGNORED_VOICE_CHANNEL_ID
+
+    if is_before_ignoring and is_after_ignoring:
         return
 
-    if before.channel and before.channel.id == IGNORED_VOICE_CHANNEL_ID:
-        return
+    if is_before_ignoring and not is_after_ignoring:
+        text = f":green_circle: **{member.display_name}** зашёл в голосовой канал **{after.channel.name}**"
+        await log_channel.send(text)
 
-    if before.channel is None and after.channel is not None:
+    elif not is_before_ignoring and is_after_ignoring:
+        text = f"🔴 **{member.display_name}** вышел из голосового канала **{before.channel.name}**"
+        await log_channel.send(text)
+
+    elif before.channel is None and after.channel is not None:
         text = f":green_circle: **{member.display_name}** зашёл в голосовой канал **{after.channel.name}**"
         await log_channel.send(text)
 
@@ -160,12 +177,62 @@ async def on_ready():
         await channel.send("**Бот запущен! (:white_check_mark:) ** \n"
                            "Щас буду побеждать, ведь я **А6**! " + "<:alhamdulilah:1542234162759475240>" * 3)
     else:
-        print("ОШИБКА: Не найден путь к консоли бота, проверьте CHANNEL_ID")
+        print("ОШИБКА: Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
 
 
 @client.event
 async def on_message(message):
     if message.author == client.user:
+        return
+
+    global is_paused
+
+    if message.content.lower() in ("a6!continue", "а6!continue"):
+        if not message.author.guild_permissions.administrator:
+            await message.channel.send("🔴 !!! У вас нет права на использование данной команды !!! 🔴")
+            return
+
+        if not is_paused:
+            await message.channel.send("**Бот уже работает!** :white_check_mark:")
+            return
+
+        is_paused = False
+
+        await client.change_presence(status=discord.Status.online, activity=discord.Game(name="Играет Nebulabrasque"))
+
+        console_channel = message.guild.get_channel(CONSOLE_CHANNEL_ID)
+        if console_channel:
+            await console_channel.send("✅ Бот возобновил работу! ✅")
+        else:
+            print("ОШИБКА: Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
+        print(f"Бот возобновил работу!")
+
+        return
+
+    if is_paused:
+        return
+
+    if message.content.lower() in ("a6!pause", "а6!pause"):
+        if not message.author.guild_permissions.administrator:
+            await message.channel.send("🔴 !!! У вас нет права на использование данной команды !!! 🔴")
+            return
+
+        if is_paused:
+            return
+
+        is_paused = True
+
+        await client.change_presence(
+            status=discord.Status.dnd, activity=discord.Game(name="Бот приостановлен")
+        )
+
+        console_channel = message.guild.get_channel(CONSOLE_CHANNEL_ID)
+        if console_channel:
+            await console_channel.send(":warning: **Бот был приостановлен** :warning:")
+        else:
+            print("ОШИБКА: Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
+        print(f"Бот приостановлен игроком {message.author}!")
+
         return
 
     if message.content.lower() in hello_variants:
