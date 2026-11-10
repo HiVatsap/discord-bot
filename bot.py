@@ -1,13 +1,15 @@
 import asyncio
 import os
+
 import discord
 from dotenv import load_dotenv
 
 from config import hello_variants, save_words
+from logger import logger
 
 load_dotenv()
 
-TOKEN = os.getenv('DISCORD_TOKEN_TEST')
+TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -49,9 +51,9 @@ async def update_stats_channels():
                 if channel1.name != new_name:
                     try:
                         await channel1.edit(name=new_name)
-                        print("ЛОГ: Имя канала 1 было обновлено")
+                        logger.info("Имя канала 1 было обновлено")
                     except discord.HTTPException as e:
-                        print(f"ОШИБКА: Имя канала 1 не было обновлено из-за лимита Дискорда ({e})")
+                        logger.warning(f"Имя канала 1 не было обновлено из-за лимита Дискорда ({e})")
 
             if channel2 and role2:
                 count = len(role2.members)
@@ -60,9 +62,9 @@ async def update_stats_channels():
                 if channel2.name != new_name:
                     try:
                         await channel2.edit(name=new_name)
-                        print("ЛОГ: Имя канала 2 было обновлено")
+                        logger.info("Имя канала 2 было обновлено")
                     except discord.HTTPException as e:
-                        print(f"ОШИБКА: Имя канала 2 не было обновлено из-за лимита Дискорда ({e})")
+                        logger.warning(f"Имя канала 2 не было обновлено из-за лимита Дискорда ({e})")
 
         await asyncio.sleep(300)
 
@@ -108,7 +110,7 @@ async def on_voice_state_update(member, before, after):
 
 @client.event
 async def on_ready():
-    print(f'Я {client.user.name}, и я поздравляю тебя с победой!')
+    logger.info(f'Я {client.user.name}, и я поздравляю тебя с победой!')
 
     client.loop.create_task(update_stats_channels())
 
@@ -117,7 +119,7 @@ async def on_ready():
         await channel.send("**Бот запущен! (:white_check_mark:) ** \n"
                            "Щас буду побеждать, ведь я **А6**! " + "<:alhamdulilah:1542234162759475240>" * 3)
     else:
-        print("ОШИБКА: Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
+        logger.error("Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
 
 
 @client.event
@@ -146,8 +148,8 @@ async def on_message(message):
         if console_channel:
             await console_channel.send("✅ Бот возобновил работу! ✅")
         else:
-            print("ОШИБКА: Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
-        print(f"Бот возобновил работу!")
+            logger.error("Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
+        logger.info(f"Бот возобновил работу!")
 
         return
 
@@ -190,8 +192,8 @@ async def on_message(message):
         if console_channel:
             await console_channel.send(":warning: **Бот был приостановлен** :warning:")
         else:
-            print("ОШИБКА: Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
-        print(f"Бот приостановлен игроком {message.author}!")
+            logger.error("Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
+        logger.info(f"Бот приостановлен игроком {message.author}!")
 
         return
 
@@ -201,41 +203,30 @@ async def on_message(message):
         await message.channel.send(f"Ваалейкум ассалям, {message.author.mention}!")
 
 
-async def shutdown():
-    print("Отключение бота...")
-    async with discord.Client(intents=intents) as temp_client:
+async def close_bot():
+    logger.info("Отключение бота...")
+    console_channel = client.get_channel(CONSOLE_CHANNEL_ID)
 
-        @temp_client.event
-        async def on_ready():
-            try:
-                channel = temp_client.get_channel(CONSOLE_CHANNEL_ID)
-                if not channel:
-                    channel = await temp_client.fetch_channel(CONSOLE_CHANNEL_ID)
-
-                await channel.send("Бот отключается! (🏮)")
-                await asyncio.sleep(0.5)
-            except Exception as e:
-                print(f"ОШИБКА: При отправке сообщения получена ошибка ({e})")
-            finally:
-                await temp_client.close()
-
+    if console_channel:
         try:
-            await temp_client.start(TOKEN)
-        except Exception:
-            pass
+            await console_channel.send("Бот отключается! (🏮)")
+            await asyncio.sleep(0.5)
+        except Exception as e:
+            logger.warning(f"При отправке сообщения получена ошибка ({e})")
+
+    await client.close()
 
 
 async def main():
     async with client:
-        await client.start(TOKEN)
+        try:
+            await client.start(TOKEN)
+        except KeyboardInterrupt:
+            await close_bot()
 
 
 if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        print("Перехвачен приказ о завершении программы!")
-        try:
-            asyncio.run(shutdown())
-        except Exception:
-            pass
+        logger.info("Перехвачен приказ о завершении программы!")
