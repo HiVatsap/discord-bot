@@ -27,6 +27,11 @@ IGNORED_VOICE_CHANNEL_ID = 1558465456451625161
 ROLE_1_ID = 1525602964968833257
 ROLE_2_ID = 1479964252675768432
 
+GREEN_COLOR = 0x29ff00
+RED_COLOR = 0xdb0000
+ORANGE_COLOR = 0xdb7200
+YELLOW_COLOR = None
+
 is_paused = False
 
 
@@ -116,8 +121,12 @@ async def on_ready():
 
     channel = client.get_channel(CONSOLE_CHANNEL_ID)
     if channel:
-        await channel.send("**Бот запущен! (:white_check_mark:) ** \n"
-                           "Щас буду побеждать, ведь я **А6**! " + "<:alhamdulilah:1542234162759475240>" * 3)
+        embed = discord.Embed(
+            title="Бот запущен! (:white_check_mark:)",
+            description="Щас буду побеждать, ведь я А6! :alhamdulilah::alhamdulilah::alhamdulilah:",
+            color=GREEN_COLOR
+        )
+        await channel.send(embed=embed)
     else:
         logger.error("Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
 
@@ -129,24 +138,64 @@ async def on_message(message):
 
     global is_paused
 
+    console_channel = message.guild.get_channel(CONSOLE_CHANNEL_ID)
     content_lower = message.content.lower()
+
+    if content_lower in ("a6!help", "а6!help"):
+        embed1 = discord.Embed(
+            title="Стандартные команды",
+            description=(
+                "`a6!addhello [слово]` - добавляет слово в список приветствий\n"
+                "`a6!help` - выводит список команд\n"
+                "`a6!removehello [слово]` - убирает слово из списка приветствий\n"
+                "`a6!version` - показывает информацию о версии бота\n"
+            ),
+            color=0x65b5ff
+        )
+        await message.channel.send(embed=embed1)
+
+        if not message.author.guild_permissions.administrator:
+            return
+
+        embed2 = discord.Embed(
+            title="Команды администратора",
+            description=(
+                "`a6!pause` - приостанавливает работу бота\n"
+                "`a6!continue` - возобновляет работу бота\n"
+            ),
+            color=0xe44b10
+        )
+        await message.channel.send(embed=embed2)
+
+        return
 
     if content_lower in ("a6!continue", "а6!continue"):
         if not message.author.guild_permissions.administrator:
-            await message.channel.send("🔴 !!! У вас нет права на использование данной команды !!! 🔴")
+            embed = discord.Embed(
+                title="!!! У вас нет права на использование данной команды !!!",
+                color=RED_COLOR
+            )
+            await message.channel.send(embed=embed)
             return
 
         if not is_paused:
-            await message.channel.send("**Бот уже работает!** :white_check_mark:")
+            embed = discord.Embed(
+                title="**Бот уже работает!** :white_check_mark:",
+                color=GREEN_COLOR
+            )
+            await message.channel.send(embed=embed)
             return
 
         is_paused = False
 
         await client.change_presence(status=discord.Status.online, activity=discord.Game(name="Играет Nebulabrasque"))
 
-        console_channel = message.guild.get_channel(CONSOLE_CHANNEL_ID)
         if console_channel:
-            await console_channel.send("✅ Бот возобновил работу! ✅")
+            embed = discord.Embed(
+                title="✅ Бот возобновил работу! ✅",
+                color=GREEN_COLOR
+            )
+            await console_channel.send(embed=embed)
         else:
             logger.error("Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
         logger.info(f"Бот возобновил работу!")
@@ -159,24 +208,89 @@ async def on_message(message):
     if content_lower.startswith(("a6!addhello", "а6!addhello")):
         parts = message.content.split(maxsplit=1)
         if len(parts) < 2:
-            await message.channel.send(
-                ":warning: Укажите слово, которое хотите вставить! Например: a6!addhello ку :warning:"
+            embed = discord.Embed(
+                title=":warning: Укажите слово, которое хотите вставить! :warning:",
+                description="> *Например: a6!addhello ку*",
+                color=ORANGE_COLOR
             )
+            await message.channel.send(embed=embed)
             return
         new_word = parts[1].strip().lower()
 
         if new_word in hello_variants:
-            await message.channel.send(f'⚠️ Слово "{new_word}" уже есть в списке приветствий ⚠️')
+            embed = discord.Embed(
+                title=f'⚠️ Слово "{new_word}" уже есть в списке приветствий ⚠️',
+                color=ORANGE_COLOR
+            )
+            await message.channel.send(embed=embed)
             return
 
         hello_variants.append(new_word)
         save_words(hello_variants)
-        await message.channel.send(f'ℹ️  Слово "{new_word}" добавлено в список приветствий  ℹ️')
+
+        embed = discord.Embed(
+            title=f'ℹ️  Слово "{new_word}" добавлено в список приветствий  ℹ️',
+            color=0x1098d8
+        )
+        await message.channel.send(embed=embed)
+        return
+
+    if content_lower.startswith(("a6!removehello", "а6!removehello")):
+        parts = message.content.split(maxsplit=1)
+        if len(parts) < 2:
+            embed = discord.Embed(
+                title=":warning: Укажите слово, которое хотите убрать! :warning:",
+                description="> *Например: a6!removehello йолоп*",
+                color=ORANGE_COLOR
+            )
+            await message.channel.send(embed=embed)
+            return
+        word = parts[1].strip().lower()
+
+        if word not in hello_variants:
+            embed = discord.Embed(
+                title=f'⚠️ Слово "{word}" не находится в списке приветствий ⚠️',
+                color=ORANGE_COLOR
+            )
+            await message.channel.send(embed=embed)
+            return
+
+        hello_variants.remove(word)
+        save_words(hello_variants)
+
+        embed = discord.Embed(
+            title=f'ℹ️  Слово "{word}" удалено из списка приветствий  ℹ️',
+            color=0x1098d8
+        )
+        await message.channel.send(embed=embed)
+        return
+
+    if content_lower in ("a6!version", "а6!version"):
+        embed = discord.Embed(
+            title="Я А6 и я поздравляю тебя с победой!",
+            description=(
+                "Версия бота: 1.4.0\n"
+                "Выпущена: 10.11.2026\n\n"
+                "Что нового:\n"
+                "> - Добавлена команда а6!addhello\n"
+                "> - Добавлена команда а6!removehello\n"
+                "> - Добавлена команда а6!help\n"
+                "> - Добавлена команда а6!version\n"
+                "> - Багфиксы и улучшение структуры кода\n"
+            ),
+            color=0xcae6c7
+        )
+
+        await message.channel.send(embed=embed)
         return
 
     if content_lower in ("a6!pause", "а6!pause"):
         if not message.author.guild_permissions.administrator:
-            await message.channel.send("🔴 !!! У вас нет права на использование данной команды !!! 🔴")
+            embed = discord.Embed(
+                title="!!! У вас нет права на использование данной команды !!!",
+                color=RED_COLOR
+            )
+            await message.channel.send(embed=embed)
             return
 
         if is_paused:
@@ -188,9 +302,12 @@ async def on_message(message):
             status=discord.Status.dnd, activity=discord.Game(name="Бот приостановлен")
         )
 
-        console_channel = message.guild.get_channel(CONSOLE_CHANNEL_ID)
         if console_channel:
-            await console_channel.send(":warning: **Бот был приостановлен** :warning:")
+            embed = discord.Embed(
+                title=":warning: **Бот был приостановлен** :warning:",
+                color=0xdbb800
+            )
+            await console_channel.send(embed=embed)
         else:
             logger.error("Не найден путь к консоли бота, проверьте CONSOLE_CHANNEL_ID")
         logger.info(f"Бот приостановлен игроком {message.author}!")
@@ -198,35 +315,36 @@ async def on_message(message):
         return
 
     if content_lower in hello_variants:
-        await message.channel.send(f"{message.content.capitalize()}, {message.author.mention}!")
+        await message.channel.send(f"{content_lower.capitalize()}, {message.author.mention}!")
     if content_lower in ("ас-саляму алейкум", "السَّلَامُ عَلَيْكُمْ", "ассаляму алейкум"):
         await message.channel.send(f"Ваалейкум ассалям, {message.author.mention}!")
-
-
-async def close_bot():
-    logger.info("Отключение бота...")
-    console_channel = client.get_channel(CONSOLE_CHANNEL_ID)
-
-    if console_channel:
-        try:
-            await console_channel.send("Бот отключается! (🏮)")
-            await asyncio.sleep(0.5)
-        except Exception as e:
-            logger.warning(f"При отправке сообщения получена ошибка ({e})")
-
-    await client.close()
 
 
 async def main():
     async with client:
         try:
             await client.start(TOKEN)
-        except KeyboardInterrupt:
-            await close_bot()
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            logger.info("Отключение бота...")
+
+            console_channel = client.get_channel(CONSOLE_CHANNEL_ID)
+            if console_channel:
+                try:
+                    embed = discord.Embed(
+                        title="Бот отключается! (🏮)",
+                        color=RED_COLOR
+                    )
+                    await console_channel.send(embed=embed)
+                    logger.info("Доставлено сообщение о отключении!")
+                    await asyncio.sleep(0.5)
+                except Exception as e:
+                    logger.warning(f"При отправке сообщения получена ошибка ({e})")
+
+            raise
 
 
 if __name__ == '__main__':
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logger.info("Перехвачен приказ о завершении программы!")
+        logger.info("Бот отключен!")
