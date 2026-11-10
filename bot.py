@@ -9,7 +9,9 @@ from logger import logger
 
 load_dotenv()
 
-TOKEN = os.getenv('DISCORD_TOKEN')
+is_tested = os.getenv("IS_TESTED", "false").lower() == "true"
+
+TOKEN = (os.getenv("DISCORD_TOKEN_TEST") if is_tested else os.getenv("DISCORD_TOKEN"))
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -269,14 +271,11 @@ async def on_message(message):
         embed = discord.Embed(
             title="Я А6 и я поздравляю тебя с победой!",
             description=(
-                "Версия бота: 1.4.0\n"
+                "Версия бота: 1.4.1\n"
                 "Выпущена: 10.11.2026\n\n"
                 "Что нового:\n"
-                "> - Добавлена команда а6!addhello\n"
-                "> - Добавлена команда а6!removehello\n"
-                "> - Добавлена команда а6!help\n"
-                "> - Добавлена команда а6!version\n"
-                "> - Багфиксы и улучшение структуры кода\n"
+                "> - Изменена система приветствий\n"
+                "> - Улучшения в структуре кода\n"
             ),
             color=0xcae6c7
         )
@@ -314,10 +313,19 @@ async def on_message(message):
 
         return
 
-    if content_lower in hello_variants:
-        await message.channel.send(f"{content_lower.capitalize()}, {message.author.mention}!")
-    if content_lower in ("ас-саляму алейкум", "السَّلَامُ عَلَيْكُمْ", "ассаляму алейкум"):
-        await message.channel.send(f"Ваалейкум ассалям, {message.author.mention}!")
+    sorted_variants = sorted(hello_variants, key=len, reverse=True)
+
+    matched_variant = None
+    for variant in sorted_variants:
+        if content_lower.startswith(variant.lower()):
+            matched_variant = variant
+            break
+
+    if matched_variant:
+        if matched_variant in ("ас-саляму алейкум", "السَّلَامُ عَلَيْكُمْ", "ассаляму алейкум"):
+            await message.channel.send(f"Ваалейкум ассалям, {message.author.mention}!")
+        else:
+            await message.channel.send(f"{matched_variant.capitalize()}, {message.author.mention}!")
 
 
 async def main():
