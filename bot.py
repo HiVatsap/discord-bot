@@ -378,7 +378,7 @@ async def on_message(message):
         embed = discord.Embed(
             title="Я А6 и я поздравляю тебя с победой!",
             description=(
-                "Версия бота: 1.5.1\n"
+                "Версия бота: 1.5.3\n"
                 "Выпущена: 11.11.2026\n\n"
                 "Что нового:\n"
                 "> - Добавлена команда а6!light\n"
