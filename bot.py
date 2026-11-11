@@ -1,33 +1,42 @@
 import asyncio
+import datetime
 import os
+from zoneinfo import ZoneInfo
 
 import discord
 from dotenv import load_dotenv
 
 from config import hello_variants, save_words
+from light import connect, light_intervals_str, light_status
 from logger import logger
+
 
 load_dotenv()
 
 is_tested = os.getenv("IS_TESTED", "false").lower() == "true"
-
 TOKEN = (os.getenv("DISCORD_TOKEN_TEST") if is_tested else os.getenv("DISCORD_TOKEN"))
+
 
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-activity = discord.Game(name="Играет Nebulabrasque")
 
+activity = discord.Game(name="Играет Nebulabrasque")
 client = discord.Client(intents=intents, activity=activity)
+
 
 CONSOLE_CHANNEL_ID = 1568958721428815912
 COUNT_CHANNEL_1_ID = 1558849614369521826
 COUNT_CHANNEL_2_ID = 1558850421613797517
 VOICE_LOG_CHANNEL_ID = 1569332801029799946
 IGNORED_VOICE_CHANNEL_ID = 1558465456451625161
+
 ROLE_1_ID = 1525602964968833257
 ROLE_2_ID = 1479964252675768432
+
+HIVATSAP_ID = 849706753587150920
+
 
 GREEN_COLOR = 0x29ff00
 RED_COLOR = 0xdb0000
@@ -143,6 +152,38 @@ async def on_message(message):
     console_channel = message.guild.get_channel(CONSOLE_CHANNEL_ID)
     content_lower = message.content.lower()
 
+    hivatsap = message.author.guild.get_member(HIVATSAP_ID).nick
+
+    now = datetime.datetime.now(ZoneInfo("Europe/Kyiv"))
+    datetime_str = now.strftime("%H:%M")
+
+    if content_lower in ("a6!stop", "а6!stop"):
+        if not message.author.guild_permissions.administrator:
+            embed = discord.Embed(
+                title="!!! У вас нет права на использование данной команды !!!",
+                color=RED_COLOR
+            )
+            await message.channel.send(embed=embed)
+            return
+
+        logger.info("Администратор вызвал экстренное завершение программы!")
+        logger.info("Отключение бота...")
+
+        console_channel = client.get_channel(CONSOLE_CHANNEL_ID)
+        if console_channel:
+            try:
+                embed = discord.Embed(
+                    title="Бот отключается! (🏮)",
+                    color=RED_COLOR
+                )
+                await console_channel.send(embed=embed)
+                logger.info("Доставлено сообщение о отключении!")
+                await asyncio.sleep(0.5)
+            except Exception as e:
+                logger.warning(f"При отправке сообщения получена ошибка ({e})")
+
+        await client.close()
+
     if content_lower in ("a6!help", "а6!help"):
         embed1 = discord.Embed(
             title="Стандартные команды",
@@ -151,6 +192,7 @@ async def on_message(message):
                 "`a6!help` - выводит список команд\n"
                 "`a6!removehello [слово]` - убирает слово из списка приветствий\n"
                 "`a6!version` - показывает информацию о версии бота\n"
+                f"`a6!light` - показывает график отключения света у {hivatsap}\n"
             ),
             color=0x65b5ff
         )
@@ -164,6 +206,7 @@ async def on_message(message):
             description=(
                 "`a6!pause` - приостанавливает работу бота\n"
                 "`a6!continue` - возобновляет работу бота\n"
+                "`a6!stop` - экстренная остановка бота\n"
             ),
             color=0xe44b10
         )
@@ -207,6 +250,70 @@ async def on_message(message):
     if is_paused:
         return
 
+    if content_lower in ("a6!light", "а6!light"):
+        logger.info("Вызвана команда а6!help")
+        if connect:
+            if light_intervals_str is not None:
+                if light_status is None:
+                    embed = discord.Embed(
+                        title=f":warning:  График света для {hivatsap}  :warning:",
+                        description=(
+                            "**Ошибка!** Не удалось определить статус отключения!\n\n"
+                            "**График отключений на сегодня:**\n"
+                            f"{light_intervals_str}\n\n"
+                            f"Сейчас: `{datetime_str}`"
+                        ),
+                        color=ORANGE_COLOR
+                    )
+                    await message.channel.send(embed=embed)
+
+                elif light_status:
+                    embed = discord.Embed(
+                        title=f":white_check_mark:  График света для {hivatsap}  :white_check_mark:",
+                        description=(
+                            "На данный момент свет **присутствует.**\n\n"
+                            "**График отключений на сегодня:**\n"
+                            f"{light_intervals_str}\n\n"
+                            f"Сейчас: `{datetime_str}`"
+                        ),
+                        color=GREEN_COLOR
+                    )
+                    await message.channel.send(embed=embed)
+                    logger.info("Передано сообщение: Свет присутствует.")
+
+                else:
+                    embed = discord.Embed(
+                        title=f":red_circle:  График света для {hivatsap}  :red_circle:",
+                        description=(
+                            "На данный момент свет **отсутствует.**\n\n"
+                            "**График отключений на сегодня:**\n"
+                            f"{light_intervals_str}\n\n"
+                            f"Сейчас: `{datetime_str}`"
+                        ),
+                        color=RED_COLOR
+                    )
+                    await message.channel.send(embed=embed)
+                    logger.info("Передано сообщение: Свет отсутствует.")
+
+            else:
+                embed = discord.Embed(
+                    title=f":white_check_mark:  График света для {hivatsap}  :white_check_mark:",
+                    description="График отключений на данный момент пуст!",
+                    color=GREEN_COLOR
+                )
+                await message.channel.send(embed=embed)
+
+        else:
+            embed = discord.Embed(
+                title=f":warning:  График света для {hivatsap}  :warning:",
+                description=(
+                    "Произошла непредвиденная ошибка, при попытке выполнения команды!\n"
+                    "Отчёт записан в лог!"
+                ),
+                color=ORANGE_COLOR
+            )
+            await message.channel.send(embed=embed)
+
     if content_lower.startswith(("a6!addhello", "а6!addhello")):
         parts = message.content.split(maxsplit=1)
         if len(parts) < 2:
@@ -232,7 +339,7 @@ async def on_message(message):
 
         embed = discord.Embed(
             title=f'ℹ️  Слово "{new_word}" добавлено в список приветствий  ℹ️',
-            color=0x1098d8
+            color=GREEN_COLOR
         )
         await message.channel.send(embed=embed)
         return
@@ -262,7 +369,7 @@ async def on_message(message):
 
         embed = discord.Embed(
             title=f'ℹ️  Слово "{word}" удалено из списка приветствий  ℹ️',
-            color=0x1098d8
+            color=RED_COLOR
         )
         await message.channel.send(embed=embed)
         return
@@ -271,10 +378,10 @@ async def on_message(message):
         embed = discord.Embed(
             title="Я А6 и я поздравляю тебя с победой!",
             description=(
-                "Версия бота: 1.4.1\n"
-                "Выпущена: 10.11.2026\n\n"
+                "Версия бота: 1.5.0\n"
+                "Выпущена: 12.11.2026\n\n"
                 "Что нового:\n"
-                "> - Изменена система приветствий\n"
+                "> - Добавлена команда а6!light\n"
                 "> - Улучшения в структуре кода\n"
             ),
             color=0xcae6c7
