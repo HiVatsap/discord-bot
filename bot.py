@@ -7,7 +7,7 @@ import discord
 from dotenv import load_dotenv
 
 from config import hello_variants, save_words
-from light import connect, light_intervals_str, light_status
+import light
 from logger import logger
 
 
@@ -251,29 +251,29 @@ async def on_message(message):
         return
 
     if content_lower in ("a6!light", "а6!light"):
-        logger.info("Вызвана команда а6!help")
-        if connect:
-            if light_intervals_str is not None:
-                if light_status is None:
+        logger.info("Вызвана команда а6!light")
+        if light.connect:
+            if light.light_intervals_str is not None:
+                if light.light_status is None:
                     embed = discord.Embed(
                         title=f":warning:  График света для {hivatsap}  :warning:",
                         description=(
                             "**Ошибка!** Не удалось определить статус отключения!\n\n"
                             "**График отключений на сегодня:**\n"
-                            f"{light_intervals_str}\n\n"
+                            f"{light.light_intervals_str}\n\n"
                             f"Сейчас: `{datetime_str}`"
                         ),
                         color=ORANGE_COLOR
                     )
                     await message.channel.send(embed=embed)
 
-                elif light_status:
+                elif light.light_status:
                     embed = discord.Embed(
                         title=f":white_check_mark:  График света для {hivatsap}  :white_check_mark:",
                         description=(
                             "На данный момент свет **присутствует.**\n\n"
                             "**График отключений на сегодня:**\n"
-                            f"{light_intervals_str}\n\n"
+                            f"{light.light_intervals_str}\n\n"
                             f"Сейчас: `{datetime_str}`"
                         ),
                         color=GREEN_COLOR
@@ -287,7 +287,7 @@ async def on_message(message):
                         description=(
                             "На данный момент свет **отсутствует.**\n\n"
                             "**График отключений на сегодня:**\n"
-                            f"{light_intervals_str}\n\n"
+                            f"{light.light_intervals_str}\n\n"
                             f"Сейчас: `{datetime_str}`"
                         ),
                         color=RED_COLOR
