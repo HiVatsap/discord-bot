@@ -7,7 +7,7 @@ import discord
 from dotenv import load_dotenv
 
 from config import hello_variants, save_words
-import light
+from light import light
 from logger import logger
 
 
@@ -252,28 +252,29 @@ async def on_message(message):
 
     if content_lower in ("a6!light", "а6!light"):
         logger.info("Вызвана команда а6!light")
-        if light.connect:
-            if light.light_intervals_str is not None:
-                if light.light_status is None:
+        connect, light_intervals_str, light_status = light()
+        if connect:
+            if light_intervals_str is not None:
+                if light_status is None:
                     embed = discord.Embed(
                         title=f":warning:  График света для {hivatsap}  :warning:",
                         description=(
                             "**Ошибка!** Не удалось определить статус отключения!\n\n"
                             "**График отключений на сегодня:**\n"
-                            f"{light.light_intervals_str}\n\n"
+                            f"{light_intervals_str}\n\n"
                             f"Сейчас: `{datetime_str}`"
                         ),
                         color=ORANGE_COLOR
                     )
                     await message.channel.send(embed=embed)
 
-                elif light.light_status:
+                elif light_status:
                     embed = discord.Embed(
                         title=f":white_check_mark:  График света для {hivatsap}  :white_check_mark:",
                         description=(
                             "На данный момент свет **присутствует.**\n\n"
                             "**График отключений на сегодня:**\n"
-                            f"{light.light_intervals_str}\n\n"
+                            f"{light_intervals_str}\n\n"
                             f"Сейчас: `{datetime_str}`"
                         ),
                         color=GREEN_COLOR
@@ -287,7 +288,7 @@ async def on_message(message):
                         description=(
                             "На данный момент свет **отсутствует.**\n\n"
                             "**График отключений на сегодня:**\n"
-                            f"{light.light_intervals_str}\n\n"
+                            f"{light_intervals_str}\n\n"
                             f"Сейчас: `{datetime_str}`"
                         ),
                         color=RED_COLOR
@@ -378,7 +379,7 @@ async def on_message(message):
         embed = discord.Embed(
             title="Я А6 и я поздравляю тебя с победой!",
             description=(
-                "Версия бота: 1.5.3\n"
+                "Версия бота: 1.5.4\n"
                 "Выпущена: 11.11.2026\n\n"
                 "Что нового:\n"
                 "> - Добавлена команда а6!light\n"
