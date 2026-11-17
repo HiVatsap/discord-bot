@@ -194,6 +194,10 @@ async def on_message(message: discord.Message) -> None:
         await pause(message, console_channel)
         return
 
+    if "я прошёл" in content_lower or "я прошел" in content_lower:
+        await congratulation(message)
+        return
+
     sorted_variants = sorted(hello_variants, key=len, reverse=True)
     matched_variant = None
 
@@ -440,16 +444,20 @@ async def version(message: discord.Message) -> None:
     embed = discord.Embed(
         title="Я А6 и я поздравляю тебя с победой!",
         description=(
-            "Версия бота: 1.5.5\n"
-            "Выпущена: 13.11.2026\n\n"
+            "Версия бота: 1.6.0\n"
+            "Выпущена: 17.11.2026\n\n"
             "Что нового:\n"
-            "> - Добавлена команда а6!light\n"
-            "> - Масштабные улучшения в структуре кода\n"
+            "> - Добавлено поздравление с победой\n"
+            "> - Улучшено логирование команды а6!light для администрации\n"
         ),
         color=0xcae6c7
     )
 
     await message.channel.send(embed=embed)
+
+
+async def congratulation(message) -> None:
+    await message.channel.send("Я **А6**, и я поздравляю **тебя** с победой!!! :checkered_flag: :checkered_flag: :checkered_flag: ")
 
 
 async def pause(message: discord.Message, console_channel: discord.TextChannel) -> None:
