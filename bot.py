@@ -333,7 +333,7 @@ async def get_light(message: discord.Message, target_nickname: str) -> None:
                 embed = discord.Embed(
                     title=f":white_check_mark:  График света для {target_nickname}  :white_check_mark:",
                     description=(
-                        "На данный момент свет **присутствует.**\n\n"
+                        "На данный момент свет **имеица.**\n\n"
                         "**График отключений на сегодня:**\n"
                         f"{light_intervals_str}\n\n"
                         f"Сейчас: `{datetime_str}`"
@@ -341,13 +341,13 @@ async def get_light(message: discord.Message, target_nickname: str) -> None:
                     color=GREEN_COLOR
                 )
                 await message.channel.send(embed=embed)
-                logger.info("Передано сообщение: Свет присутствует.")
+                logger.info("Передано сообщение: Свет имеица.")
 
             else:
                 embed = discord.Embed(
                     title=f":red_circle:  График света для {target_nickname}  :red_circle:",
                     description=(
-                        "На данный момент свет **отсутствует.**\n\n"
+                        "На данный момент свет **не имеица.**\n\n"
                         "**График отключений на сегодня:**\n"
                         f"{light_intervals_str}\n\n"
                         f"Сейчас: `{datetime_str}`"
@@ -355,7 +355,7 @@ async def get_light(message: discord.Message, target_nickname: str) -> None:
                     color=RED_COLOR
                 )
                 await message.channel.send(embed=embed)
-                logger.info("Передано сообщение: Свет отсутствует.")
+                logger.info("Передано сообщение: Свет не имеица.")
 
         else:
             embed = discord.Embed(
@@ -444,7 +444,7 @@ async def version(message: discord.Message) -> None:
     embed = discord.Embed(
         title="Я А6 и я поздравляю тебя с победой!",
         description=(
-            "Версия бота: 1.6.0\n"
+            "Версия бота: 1.6.1\n"
             "Выпущена: 17.11.2026\n\n"
             "Что нового:\n"
             "> - Добавлено поздравление с победой\n"
